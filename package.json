@@ -1,0 +1,24 @@
+{
+  "name": "kaamelott-bot",
+  "version": "1.0.0",
+  "description": "a slack bot for kaamelott",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HugoGresse/kaamelott-bot.git"
+  },
+  "keywords": [
+    "slack",
+    "firebase",
+    "bot"
+  ],
+  "author": "Hugo Gresse",
+  "license": "SEE LICENSE IN LICENSE",
+  "bugs": {
+    "url": "https://github.com/HugoGresse/kaamelott-bot/issues"
+  },
+  "homepage": "https://github.com/HugoGresse/kaamelott-bot#readme"
+}

@@ -7,7 +7,7 @@ export const oauthRedirect = functions.https.onRequest(async (request, response)
     const {slack} = functions.config()
 
     if (!slack || !slack.client_id || !slack.client_secret) {
-        console.error("Missing slack credentials (client_id or client_secret")
+        console.error("Missing slack credentials (client_id or client_secret)")
         return response.status(501).send("Missing slack credentials")
     }
 
@@ -38,7 +38,6 @@ export const oauthRedirect = functions.https.onRequest(async (request, response)
     }
 
     const slackResultData = await result.json()
-    console.log(slackResultData)
     await saveNewInstallation(slackResultData)
 
     return response.header("Location", `https://${process.env.GCLOUD_PROJECT}.firebaseapp.com/slack/success`).send(302)

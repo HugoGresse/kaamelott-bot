@@ -1,11 +1,66 @@
 import * as functions from 'firebase-functions'
-import * as corsModule from 'cors'
+import fetch from 'node-fetch'
+import {URLSearchParams} from 'url'
+import {db} from './utils/initFirebase'
 
-const cors = corsModule({origin: true,})
+export const oauthRedirect = functions.https.onRequest(async (request, response) => {
+    const {slack} = functions.config()
 
-export const oauthRedirect = functions.https.onRequest((req, res) => {
-    return cors(req, res, () => {
+    if (!slack || !slack.client_id || !slack.client_secret) {
+        console.error("Missing slack credentials (client_id or client_secret")
+        return response.status(501).send("Missing slack credentials")
+    }
 
-        return res.status(200).send()
+    if (request.method !== "GET") {
+        console.error('Got unsupported ${request.method} request. Expected GET.')
+        return response.status(405).send("Only GET requests are accepted")
+    }
+
+    // @ts-ignore
+    if (!request.query && !request.query.code) {
+        return response.status(401).send("Missing query attribute 'code'")
+    }
+
+    const params = new URLSearchParams()
+    params.append('code', `${request.query.code}`)
+    params.append('client_id', `${slack.client_id}`)
+    params.append('client_secret', `${slack.client_secret}`)
+    params.append('redirect_uri', `https://us-central1-${process.env.GCLOUD_PROJECT}.cloudfunctions.net/oauthRedirect`)
+
+    const result = await fetch("https://slack.com/api/oauth.access", {
+        method: "POST",
+        body: params
     })
+
+    if (!result.ok) {
+        console.error("The request was not ok: " + JSON.stringify(result))
+        return response.header("Location", `https://${process.env.GCLOUD_PROJECT}.firebaseapp.com`).send(302)
+    }
+
+    const slackResultData = await result.json()
+    console.log(slackResultData)
+    await saveNewInstallation(slackResultData)
+
+    return response.header("Location", `https://${process.env.GCLOUD_PROJECT}.firebaseapp.com/slack/success`).send(302)
 })
+
+export const saveNewInstallation = async (slackResultData: {
+    team_id: string,
+    team_name: string,
+    access_token: string,
+    incoming_webhook: {
+        url: string,
+        channel_id: string
+    }
+}) => {
+    return await db.collection("installations")
+        .doc(slackResultData.team_id).set({
+            token: slackResultData.access_token,
+            teamId: slackResultData.team_id,
+            teamName: slackResultData.team_name,
+            webhook: {
+                url: slackResultData.incoming_webhook.url,
+                channel: slackResultData.incoming_webhook.channel_id
+            }
+        })
+}

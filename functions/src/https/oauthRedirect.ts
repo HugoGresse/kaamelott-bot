@@ -1,7 +1,7 @@
 import * as functions from 'firebase-functions'
 import fetch from 'node-fetch'
 import {URLSearchParams} from 'url'
-import {db} from './utils/initFirebase'
+import {db, serverTimestamp} from './utils/initFirebase'
 
 export const oauthRedirect = functions.https.onRequest(async (request, response) => {
     const {slack} = functions.config()
@@ -27,7 +27,7 @@ export const oauthRedirect = functions.https.onRequest(async (request, response)
     params.append('client_secret', `${slack.client_secret}`)
     params.append('redirect_uri', `https://us-central1-${process.env.GCLOUD_PROJECT}.cloudfunctions.net/oauthRedirect`)
 
-    const result = await fetch("https://slack.com/api/oauth.access", {
+    const result = await fetch("https://slack.com/api/oauth.v2.access", {
         method: "POST",
         body: params
     })
@@ -44,8 +44,10 @@ export const oauthRedirect = functions.https.onRequest(async (request, response)
 })
 
 export const saveNewInstallation = async (slackResultData: {
-    team_id: string,
-    team_name: string,
+    team: {
+        id: string,
+        name: string
+    },
     access_token: string,
     incoming_webhook: {
         url: string,
@@ -53,13 +55,10 @@ export const saveNewInstallation = async (slackResultData: {
     }
 }) => {
     return await db.collection("installations")
-        .doc(slackResultData.team_id).set({
+        .doc(slackResultData.team.id).set({
             token: slackResultData.access_token,
-            teamId: slackResultData.team_id,
-            teamName: slackResultData.team_name,
-            webhook: {
-                url: slackResultData.incoming_webhook.url,
-                channel: slackResultData.incoming_webhook.channel_id
-            }
+            teamId: slackResultData.team.id,
+            teamName: slackResultData.team.name,
+            createdAt: serverTimestamp()
         })
 }

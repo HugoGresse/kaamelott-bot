@@ -30,7 +30,7 @@ export const verifySlackPostRequest = async (request: functions.https.Request, r
         return [false]
     }
 
-    const webhookUrl = await getWebhookUrl(request.body.team_id)
+    const webhookUrl = await getWebhookUrl(request.body.team_id || JSON.parse(request.body.payload).team.id)
     if (!webhookUrl) {
         await response.send('Application not configured for your workplace')
         return [false]

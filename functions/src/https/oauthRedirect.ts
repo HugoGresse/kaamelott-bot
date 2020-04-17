@@ -16,6 +16,12 @@ export const oauthRedirect = functions.https.onRequest(async (request, response)
         return response.status(405).send("Only GET requests are accepted")
     }
 
+    // SSL_CHECK by slack to confirm SSL cert
+    if (request.query && request.query.ssl_check === "1") {
+        console.log("Confirmed SSL Cert")
+        return response.status(200).send()
+    }
+
     // @ts-ignore
     if (!request.query && !request.query.code) {
         return response.status(401).send("Missing query attribute 'code'")

@@ -40,7 +40,7 @@ export const slackInteractivity = functions.https.onRequest(async (request, resp
 
     await postFileToSlack(responseUrl, selectedFile, channelId, token)
 
-    return
+    return await deletePreviewMessage(responseUrl)
 })
 
 const deletePreviewMessage = (responseUrl: string) => {
@@ -59,19 +59,27 @@ const postFileToSlack = async (responseUrl: string, selectedFile: string, channe
         console.log("File fetch failed, should add a message")
         return await deletePreviewMessage(responseUrl)
     }
-
-    console.log(responseUrl, selectedFile, channelId, token)
+    const buffer = await fileFetchResult.buffer()
 
     const form = new FormData()
     form.append('token', token)
     form.append('channels', channelId)
-    form.append('file', fileFetchResult.body)
     form.append('filename', selectedFile)
+    form.append('title', selectedFile)
+    form.append('filetype', "mp3")
+    form.append('file', buffer, {
+        contentType: 'audio/mpeg3',
+        filename: selectedFile
+    } as FormData.AppendOptions)
 
     return fetch("https://slack.com/api/files.upload", {
         method: "POST",
+        headers: form.getHeaders(),
         body: form
     }).then(async response => {
-        console.log(await response.json())
+        if (!response.ok) {
+            console.warn(await response.json())
+        }
+        return response
     })
 }

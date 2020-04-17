@@ -22,6 +22,18 @@ export const slackCommand = functions.https.onRequest(async (request, response) 
 })
 
 export const getSlackPreviewBlock = (soundsMeta: Sound[]) => {
+    if (soundsMeta.length === 0) {
+        return {
+            blocks: [{
+                type: "section",
+                text: {
+                    type: "mrkdwn",
+                    text: `Aucune réplique trouvé correspondant à votre demande`
+                },
+            }]
+        }
+    }
+
     const blocks = soundsMeta.map(soundMeta => ({
         type: "section",
         text: {

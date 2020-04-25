@@ -1,4 +1,4 @@
-import {db} from './initFirebase'
+import {db} from '../../common/initFirebase'
 
 export const getAppToken = async (teamId: string): Promise<string | null> => {
     const docSnapshot = await db.collection("installations").doc(teamId).get()

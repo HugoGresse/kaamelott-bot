@@ -1,7 +1,7 @@
 import * as functions from 'firebase-functions'
 import fetch from 'node-fetch'
 import {URLSearchParams} from 'url'
-import {db, serverTimestamp} from './utils/initFirebase'
+import {db, serverTimestamp} from '../common/initFirebase'
 
 export const oauthRedirect = functions.https.onRequest(async (request, response) => {
     const {slack} = functions.config()

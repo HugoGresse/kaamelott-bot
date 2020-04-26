@@ -15,9 +15,14 @@ export const twitterCron = async () => {
 
 export const twitterCronCallable = functions.https.onRequest(async (request, response) => {
     await twitterCron().catch(error => {
-        response.status(500).send(error)
+        response.status(500).send({
+            msg: "error",
+            error
+        })
     })
-    response.send()
+    response.send({
+        success: true
+    })
 })
 
 
@@ -33,18 +38,14 @@ const getMissingQuotes = async (): Promise<Sound[]> => {
 }
 
 const uploadMissingQuotes = async (quotes: Sound[]) => {
-    const tweetId = await addQuoteToTwitter(quotes[0])
-    await saveQuote(tweetId, quotes[0])
-
-    // for(let i = 0; i < quotes.length; i++) {
-    //     console.log("Add sound ",quotes[i].file )
-    //
-    //     await saveQuote(quotes[i])
-    // }
+    if (quotes.length > 0) {
+        const tweetId = await addQuoteToTwitter(quotes[0])
+        await saveQuote(tweetId, quotes[0])
+    }
 }
 
 const saveQuote = async (tweetId: string, quote: Sound) => {
-    console.log(quote)
+    console.log(`>Added ${quote.title}!`)
     await addSound(tweetId, quote)
 }
 

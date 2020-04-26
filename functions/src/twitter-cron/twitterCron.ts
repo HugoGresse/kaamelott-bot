@@ -56,13 +56,6 @@ const saveQuote = async (tweetId: string, quote: Sound) => {
 }
 
 const addQuoteToTwitter = async (quote: Sound): Promise<string> => {
-    if (!twitterClient) {
-        throw new functions.https.HttpsError(
-            'failed-precondition',
-            'Missing Twitter credentials'
-        )
-    }
-
     return uploadMedia(quote)
         .then(mediaId => {
             if (!twitterClient) {
@@ -74,7 +67,7 @@ const addQuoteToTwitter = async (quote: Sound): Promise<string> => {
 
             return twitterClient
                 .post('statuses/update', {
-                    status: quote.title,
+                    status: `${quote.title} \r\n${quote.character} (${quote.episode})`,
                     media_ids: mediaId
                 })
                 .then(tweet => tweet.id_str)

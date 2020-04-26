@@ -4,9 +4,9 @@ import * as FFMpegCommand from 'fluent-ffmpeg'
 import * as stream from 'stream'
 import fetch from 'node-fetch'
 import * as fs from 'fs'
+import * as os from 'os'
+import * as path from 'path'
 import {removeFile} from '../common/removeFile'
-
-const fileName = 'video.mp4'
 
 export type fileName = string
 export const convertMP3toMP4 = async (sound: Sound): Promise<fileName> => {
@@ -33,6 +33,7 @@ export const convertMP3toMP4 = async (sound: Sound): Promise<fileName> => {
 // ffmpeg -loop 1 -i image.jpg -i audio.mp3 -c:a copy -c:v libx264 -shortest out.mp4
 const convertToMP4 = (input: stream.Readable, thumbnail: string): Promise<string> => {
     return new Promise(((resolve, reject) => {
+        const videoFileName = path.join(os.tmpdir(), './video.mp4')
         const command = FFMpegCommand(input)
         command
             .addInput(thumbnail)
@@ -51,15 +52,15 @@ const convertToMP4 = (input: stream.Readable, thumbnail: string): Promise<string
             })
             .on('end', () => {
                 console.log("Video conversion ended")
-                resolve(fileName)
+                resolve(videoFileName)
             })
-            .output(fileName)
+            .output(videoFileName)
             .run()
     }))
 }
 
 const downloadThumbnail = async (thumbURL: string): Promise<string> => {
-    const tumbFileName = './thumbnail.jpg'
+    const tumbFileName = path.join(os.tmpdir(), './thumbnail.jpg')
     const thumbnailResponse = await fetch(thumbURL)
     return new Promise((resolve, reject) => {
         const fileStream = fs.createWriteStream(tumbFileName)

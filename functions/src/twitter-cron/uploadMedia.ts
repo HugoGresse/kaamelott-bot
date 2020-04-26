@@ -1,6 +1,6 @@
 import {Sound} from '../interfaces/Sound'
 import {twitterClient} from './twitter'
-import {convertMP3toMP4} from './convertMP4toMP4'
+import {convertMP3toMP4} from './convertMP3toMP4'
 import * as fs from 'fs'
 import {removeFile} from '../common/removeFile'
 

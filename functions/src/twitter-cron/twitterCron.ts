@@ -6,23 +6,30 @@ import {initTwitter, twitterClient} from './twitter'
 import {uploadMedia} from './uploadMedia'
 
 
-export const twitterCron = async () => {
+export const twitterCronTask = async () => {
     initTwitter(functions.config().twitter)
     const missingQuotes = await getMissingQuotes()
     console.log(missingQuotes.length, "missing quotes")
     await uploadMissingQuotes(missingQuotes)
 }
 
+export const twitterCron = functions.pubsub.schedule('every 3 minutes').onRun(async () => {
+    await twitterCronTask()
+    return null
+})
+
 export const twitterCronCallable = functions.https.onRequest(async (request, response) => {
-    await twitterCron().catch(error => {
+    try {
+        await twitterCronTask()
+        response.send({
+            success: true
+        })
+    } catch (error) {
         response.status(500).send({
             msg: "error",
             error
         })
-    })
-    response.send({
-        success: true
-    })
+    }
 })
 
 

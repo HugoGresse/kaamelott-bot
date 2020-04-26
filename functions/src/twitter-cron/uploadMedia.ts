@@ -2,21 +2,30 @@ import {Sound} from '../interfaces/Sound'
 import {twitterClient} from './twitter'
 import {convertMP3toMP4} from './convertMP4toMP4'
 import * as fs from 'fs'
+import {removeFile} from '../common/removeFile'
 
 export type MediaId = string
 
 export const uploadMedia = async (sound: Sound): Promise<MediaId> => {
     const mediaType = "video/mp4"
 
-    const fileName = await convertMP3toMP4(sound)
-    console.log(fileName)
+    try {
+        const fileName = await convertMP3toMP4(sound)
+        console.log("Conversation finished, received fileName: ", fileName)
 
-    const mediaData = fs.readFileSync(fileName)
-    const mediaSize = fs.statSync(fileName).size
+        const mediaData = fs.readFileSync(fileName)
+        const mediaSize = fs.statSync(fileName).size
 
-    return initUpload(mediaType, mediaSize)
-        .then(appendUpload(mediaData)) // Send the data for the media
-        .then(finalizeUpload) // Declare that you are done uploading chunks
+        return initUpload(mediaType, mediaSize)
+            .then(appendUpload(mediaData)) // Send the data for the media
+            .then(finalizeUpload) // Declare that you are done uploading chunks
+            .then(async mediaId => {
+                await removeFile(fileName)
+                return mediaId
+            })
+    } catch (error) {
+        throw error
+    }
 }
 
 /**
@@ -40,7 +49,7 @@ const appendUpload = (mediaData: Buffer) => (mediaId: string) => {
         media_id: mediaId,
         media: mediaData,
         segment_index: 0
-    }).then(data => mediaId)
+    }).then(() => mediaId)
 }
 
 /**
@@ -50,7 +59,7 @@ function finalizeUpload(mediaId: string) {
     return makePost('media/upload', {
         command: 'FINALIZE',
         media_id: mediaId
-    }).then(data => mediaId)
+    }).then(() => mediaId)
 }
 
 /**

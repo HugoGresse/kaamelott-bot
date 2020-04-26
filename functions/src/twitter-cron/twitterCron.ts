@@ -14,7 +14,9 @@ export const twitterCron = async () => {
 }
 
 export const twitterCronCallable = functions.https.onRequest(async (request, response) => {
-    await twitterCron()
+    await twitterCron().catch(error => {
+        response.status(500).send(error)
+    })
     response.send()
 })
 
@@ -54,11 +56,27 @@ const addQuoteToTwitter = async (quote: Sound): Promise<string> => {
         )
     }
 
-    await uploadMedia(quote)
+    return uploadMedia(quote)
+        .then(mediaId => {
+            if (!twitterClient) {
+                throw new functions.https.HttpsError(
+                    'failed-precondition',
+                    'Missing Twitter credentials'
+                )
+            }
 
-    return twitterClient
-        .post('statuses/update', {status: quote.file})
-        .then(tweet => tweet.id_str)
+            return twitterClient
+                .post('statuses/update', {
+                    status: quote.title,
+                    media_ids: mediaId
+                })
+                .then(tweet => tweet.id_str)
+        }).catch(error => {
+            throw new functions.https.HttpsError(
+                'internal',
+                'Failed to upload file or convert it, ' + error
+            )
+        })
 }
 
 //  `https://twitter.com/${functions.config().twitter.account_name}/status/${tweet.id_str}`

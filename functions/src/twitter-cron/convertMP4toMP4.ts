@@ -18,7 +18,7 @@ export const convertMP3toMP4 = async (sound: Sound): Promise<fileName> => {
 
             if (mp3Response.ok && mp3Response.body && thumbnailFileName) {
                 const createdFileName = await convertToMP4(mp3Response.body as any, thumbnailFileName)
-                resolve(createdFileName as string)
+                resolve(createdFileName)
             }
         } catch (error) {
             reject(error)
@@ -59,16 +59,16 @@ const convertToMP4 = (input: stream.Readable, thumbnail: string): Promise<string
 }
 
 const downloadThumbnail = async (thumbURL: string): Promise<string> => {
-    const fileName = './thumbnail.jpg'
+    const tumbFileName = './thumbnail.jpg'
     const thumbnailResponse = await fetch(thumbURL)
     return new Promise((resolve, reject) => {
-        const fileStream = fs.createWriteStream('./thumbnail.jpg')
+        const fileStream = fs.createWriteStream(tumbFileName)
         thumbnailResponse.body.pipe(fileStream)
         thumbnailResponse.body.on("error", (err: Error) => {
             reject(err)
         })
         fileStream.on("finish", function () {
-            resolve(fileName)
+            resolve(tumbFileName)
         })
     })
 }

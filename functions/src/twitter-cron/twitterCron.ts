@@ -10,7 +10,7 @@ export const twitterCronTask = async () => {
     initTwitter(functions.config().twitter)
     const missingQuotes = await getMissingQuotes()
     console.log(missingQuotes.length, "missing quotes")
-    await uploadMissingQuotes(missingQuotes)
+    await uploadOneMissingQuote(missingQuotes)
 }
 
 export const twitterCron = functions.pubsub.schedule('every 3 minutes').onRun(async () => {
@@ -32,7 +32,6 @@ export const twitterCronCallable = functions.https.onRequest(async (request, res
     }
 })
 
-
 const getMissingQuotes = async (): Promise<Sound[]> => {
     const firestoreQuotes = await getSounds()
     const firestoreSoundAsMap = firestoreQuotes.reduce((acc: { [key: string]: Sound }, item) => {
@@ -44,7 +43,7 @@ const getMissingQuotes = async (): Promise<Sound[]> => {
     return kaamelottSoundboardQuotes.filter(sound => !firestoreSoundAsMap[sound.file])
 }
 
-const uploadMissingQuotes = async (quotes: Sound[]) => {
+const uploadOneMissingQuote = async (quotes: Sound[]) => {
     if (quotes.length > 0) {
         const tweetId = await addQuoteToTwitter(quotes[0])
         await saveQuote(tweetId, quotes[0])

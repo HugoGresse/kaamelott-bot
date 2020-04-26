@@ -1,5 +1,5 @@
 import {Sound} from '../interfaces/Sound'
-import {db} from './initFirebase'
+import {db, serverTimestamp} from './initFirebase'
 
 export const getSounds = async (): Promise<Sound[]> => {
     const soundSnapshots = await db
@@ -17,6 +17,7 @@ export const addSound = async (tweetId: string, sound: Sound) => {
         .doc(sound.file)
         .set({
             ...sound,
+            createdAt: serverTimestamp(),
             tweetId
         })
 }

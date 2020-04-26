@@ -4,14 +4,8 @@ import * as functions from 'firebase-functions'
 import {addSound, getSounds} from '../common/soundCollections'
 import {initTwitter, twitterClient} from './twitter'
 import {uploadMedia} from './uploadMedia'
+import {limitCharCount} from '../utils/string'
 
-
-export const twitterCronTask = async () => {
-    initTwitter(functions.config().twitter)
-    const missingQuotes = await getMissingQuotes()
-    console.log(missingQuotes.length, "missing quotes")
-    await uploadOneMissingQuote(missingQuotes)
-}
 
 export const twitterCron = functions.pubsub.schedule('every 3 minutes').onRun(async () => {
     await twitterCronTask()
@@ -32,6 +26,13 @@ export const twitterCronCallable = functions.https.onRequest(async (request, res
     }
 })
 
+export const twitterCronTask = async () => {
+    initTwitter(functions.config().twitter)
+    const missingQuotes = await getMissingQuotes()
+    console.log(missingQuotes.length, "missing quotes")
+    await uploadOneMissingQuote(missingQuotes)
+}
+
 const getMissingQuotes = async (): Promise<Sound[]> => {
     const firestoreQuotes = await getSounds()
     const firestoreSoundAsMap = firestoreQuotes.reduce((acc: { [key: string]: Sound }, item) => {
@@ -45,8 +46,16 @@ const getMissingQuotes = async (): Promise<Sound[]> => {
 
 const uploadOneMissingQuote = async (quotes: Sound[]) => {
     if (quotes.length > 0) {
+        console.log("Adding " + quotes[0].file)
         const tweetId = await addQuoteToTwitter(quotes[0])
-        await saveQuote(tweetId, quotes[0])
+        if (tweetId) {
+            await saveQuote(tweetId, quotes[0])
+        } else {
+            throw new functions.https.HttpsError(
+                'internal',
+                'No tweet id to post the sound'
+            )
+        }
     }
 }
 
@@ -67,14 +76,14 @@ const addQuoteToTwitter = async (quote: Sound): Promise<string> => {
 
             return twitterClient
                 .post('statuses/update', {
-                    status: `${quote.title} \r\n${quote.character} (${quote.episode})`,
+                    status: limitCharCount(`${limitCharCount(quote.title, 180)}\r\n${quote.character} (${quote.episode})`, 275),
                     media_ids: mediaId
                 })
                 .then(tweet => tweet.id_str)
         }).catch(error => {
             throw new functions.https.HttpsError(
                 'internal',
-                'Failed to upload file or convert it, ' + error
+                'Failed to upload file or convert it, ' + JSON.stringify(error)
             )
         })
 }

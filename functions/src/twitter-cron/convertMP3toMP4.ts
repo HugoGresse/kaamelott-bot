@@ -6,7 +6,7 @@ import fetch from 'node-fetch'
 import * as fs from 'fs'
 import * as os from 'os'
 import * as path from 'path'
-import {removeFile} from '../common/removeFile'
+import {removeFile} from '../utils/removeFile'
 
 export type fileName = string
 export const convertMP3toMP4 = async (sound: Sound): Promise<fileName> => {

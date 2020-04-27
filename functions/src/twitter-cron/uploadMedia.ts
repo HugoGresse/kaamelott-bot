@@ -3,6 +3,7 @@ import {twitterClient} from './twitter'
 import {convertMP3toMP4} from './convertMP3toMP4'
 import * as fs from 'fs'
 import {removeFile} from '../utils/removeFile'
+import {sleep} from '../utils/sleep'
 
 export type MediaId = string
 
@@ -37,6 +38,7 @@ const initUpload = (mediaType: string, mediaSize: number) => {
         command: 'INIT',
         total_bytes: mediaSize,
         media_type: mediaType,
+        media_category: 'tweet_video'
     }).then((data: any) => data.media_id_string)
 }
 
@@ -59,7 +61,15 @@ function finalizeUpload(mediaId: string) {
     return makePost('media/upload', {
         command: 'FINALIZE',
         media_id: mediaId
-    }).then(() => mediaId)
+    }).then(async (data) => {
+        const dataInput = data as any
+        if (dataInput.processing_info && dataInput.processing_info.state === 'pending') {
+            const waitDurationMs = dataInput.processing_info.check_after_secs * 1500
+            console.log(`Waiting ${waitDurationMs} for the video to being processed`)
+            await sleep(waitDurationMs)
+        }
+        return mediaId
+    })
 }
 
 /**

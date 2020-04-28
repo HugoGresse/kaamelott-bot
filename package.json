@@ -2,9 +2,19 @@
   "name": "kaamelott-bot",
   "version": "1.0.0",
   "description": "a slack bot for kaamelott",
-  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "deploy:hosting": "npm run build && firebase deploy --only hosting"
+  },
+  "dependencies": {
+    "history": "^4.10.1",
+    "normalize.css": "^8.0.1",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-router": "^5.1.2",
+    "react-router-dom": "^5.1.2",
+    "react-scripts": "3.4.1"
   },
   "repository": {
     "type": "git",
@@ -17,8 +27,19 @@
   ],
   "author": "Hugo Gresse",
   "license": "SEE LICENSE IN LICENSE",
-  "bugs": {
-    "url": "https://github.com/HugoGresse/kaamelott-bot/issues"
+  "eslintConfig": {
+    "extends": "react-app"
   },
-  "homepage": "https://github.com/HugoGresse/kaamelott-bot#readme"
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
 }

@@ -1,15 +1,8 @@
-import fetch from 'node-fetch'
-
-export interface Sound {
-    title: string,
-    file: string,
-    episode: string,
-    character: string
-}
+import {Sound} from '../../interfaces/Sound'
+import {getSoundboardSounds} from '../../common/getSoundboardSounds'
 
 export const findBestSoundsMatch = async (inputText: string): Promise<Sound[]> => {
-    const soundsResponse = await fetch('https://raw.githubusercontent.com/2ec0b4/kaamelott-soundboard/master/sounds/sounds.json')
-    const sounds: Sound[] = await soundsResponse.json()
+    const sounds: Sound[] = await getSoundboardSounds()
 
-    return sounds.filter(sound => sound.title.trim().toLowerCase().includes(inputText))
+    return sounds.filter(sound => sound.title.trim().toLowerCase().includes(inputText) || sound.character.trim().toLowerCase().includes(inputText) || sound.episode.trim().toLowerCase().includes(inputText))
 }

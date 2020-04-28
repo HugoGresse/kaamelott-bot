@@ -1,7 +1,7 @@
 import * as functions from 'firebase-functions'
 import fetch from 'node-fetch'
 import {URLSearchParams} from 'url'
-import {db, serverTimestamp} from './utils/initFirebase'
+import {db, serverTimestamp} from '../common/initFirebase'
 
 export const oauthRedirect = functions.https.onRequest(async (request, response) => {
     const {slack} = functions.config()
@@ -14,6 +14,12 @@ export const oauthRedirect = functions.https.onRequest(async (request, response)
     if (request.method !== "GET") {
         console.error('Got unsupported ${request.method} request. Expected GET.')
         return response.status(405).send("Only GET requests are accepted")
+    }
+
+    // SSL_CHECK by slack to confirm SSL cert
+    if (request.query && request.query.ssl_check === "1") {
+        console.log("Confirmed SSL Cert")
+        return response.status(200).send()
     }
 
     // @ts-ignore

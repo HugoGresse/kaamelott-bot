@@ -1,6 +1,7 @@
 import * as functions from 'firebase-functions'
 import {verifySlackPostRequest} from './utils/verifySlackPostRequest'
-import {findBestSoundsMatch, Sound} from './utils/findBestSoundsMatch'
+import {findBestSoundsMatch} from './utils/findBestSoundsMatch'
+import {Sound} from '../interfaces/Sound'
 
 export const slackCommand = functions.https.onRequest(async (request, response) => {
     if (!await verifySlackPostRequest(request, response)) {
@@ -11,7 +12,7 @@ export const slackCommand = functions.https.onRequest(async (request, response) 
 
     const inputText = request.body.text.trim().toLowerCase()
 
-    const potentialSounds = (await findBestSoundsMatch(inputText)).slice(0, 3)
+    const potentialSounds = (await findBestSoundsMatch(inputText)).slice(0, 5)
 
     return response
         .contentType("json")

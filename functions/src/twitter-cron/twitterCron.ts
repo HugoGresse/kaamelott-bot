@@ -73,8 +73,8 @@ const uploadSound = async (sound: Sound) => {
 }
 
 const saveQuote = async (tweetId: string, quote: Sound) => {
-    console.log(`>Added ${quote.title}!`)
     await addSound(tweetId, quote)
+    console.log(`>Added ${quote.title}!`)
 }
 
 const addQuoteToTwitter = async (quote: Sound): Promise<string> => {

@@ -44,7 +44,7 @@ const convertToMP4 = (input: stream.Readable, thumbnail: string): Promise<string
             .outputOptions('-shortest')
             .format('mp4')
             .on('start', () => {
-                console.log("Video conversion started")
+                console.log(`Video conversion started, filename: ${videoFileName}`)
             })
             .on('error', (error: Error) => {
                 console.log("Video conversion error", error)

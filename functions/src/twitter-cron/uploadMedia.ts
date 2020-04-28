@@ -12,8 +12,6 @@ export const uploadMedia = async (sound: Sound): Promise<MediaId> => {
 
     try {
         const fileName = await convertMP3toMP4(sound)
-        console.log("Conversation finished, received fileName: ", fileName)
-
         const mediaData = fs.readFileSync(fileName)
         const mediaSize = fs.statSync(fileName).size
 

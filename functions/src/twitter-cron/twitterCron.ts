@@ -6,11 +6,10 @@ import {initTwitter, twitterClient} from './twitter'
 import {uploadMedia} from './uploadMedia'
 import {limitCharCount} from '../utils/string'
 
-
-export const twitterCron = functions.pubsub.schedule('every 3 minutes').onRun(async () => {
-    await twitterCronTask()
-    return null
-})
+// export const twitterCron = functions.pubsub.schedule('every 3 minutes').onRun(async () => {
+//     await twitterCronTask()
+//     return null
+// })
 
 export const twitterCronCallable = functions.https.onRequest(async (request, response) => {
     try {
@@ -30,7 +29,23 @@ export const twitterCronTask = async () => {
     initTwitter(functions.config().twitter)
     const missingQuotes = await getMissingQuotes()
     console.log(missingQuotes.length, "missing quotes")
-    await uploadOneMissingQuote(missingQuotes)
+
+    if (missingQuotes.length > 0) {
+        await uploadSound(missingQuotes[0])
+    }
+}
+
+export const twitterUpload = async (fileName: string) => {
+    initTwitter(functions.config().twitter)
+
+    const kaamelottSoundboardQuotes = await getSoundboardSounds()
+    const sounds = kaamelottSoundboardQuotes.filter(sound => sound.file === fileName)
+
+    if (sounds.length > 0) {
+        const soundToAdd = sounds[0]
+        console.log(`Trying to add ${soundToAdd.file} because it was missing`)
+        await uploadSound(soundToAdd)
+    }
 }
 
 const getMissingQuotes = async (): Promise<Sound[]> => {
@@ -44,18 +59,16 @@ const getMissingQuotes = async (): Promise<Sound[]> => {
     return kaamelottSoundboardQuotes.filter(sound => !firestoreSoundAsMap[sound.file])
 }
 
-const uploadOneMissingQuote = async (quotes: Sound[]) => {
-    if (quotes.length > 0) {
-        console.log("Adding " + quotes[0].file)
-        const tweetId = await addQuoteToTwitter(quotes[0])
-        if (tweetId) {
-            await saveQuote(tweetId, quotes[0])
-        } else {
-            throw new functions.https.HttpsError(
-                'internal',
-                'No tweet id to post the sound'
-            )
-        }
+const uploadSound = async (sound: Sound) => {
+    console.log("Adding " + sound.file)
+    const tweetId = await addQuoteToTwitter(sound)
+    if (tweetId) {
+        await saveQuote(tweetId, sound)
+    } else {
+        throw new functions.https.HttpsError(
+            'internal',
+            'No tweet id to post the sound'
+        )
     }
 }
 
@@ -87,5 +100,3 @@ const addQuoteToTwitter = async (quote: Sound): Promise<string> => {
             )
         })
 }
-
-//  `https://twitter.com/${functions.config().twitter.account_name}/status/${tweet.id_str}`

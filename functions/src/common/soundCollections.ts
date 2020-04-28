@@ -19,5 +19,17 @@ export const addSound = async (tweetId: string, sound: Sound) => {
             ...sound,
             createdAt: serverTimestamp(),
             tweetId
-        })
+        }, {merge: true})
+}
+
+export const getSound = async (fileName: string): Promise<Sound | null> => {
+    const snapshot = await db
+        .collection('sounds')
+        .doc(fileName)
+        .get()
+
+    if (snapshot.exists) {
+        return snapshot.data() as Sound
+    }
+    return null
 }

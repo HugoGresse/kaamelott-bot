@@ -1,7 +1,9 @@
 import * as functions from 'firebase-functions'
 import {verifySlackPostRequest} from './utils/verifySlackPostRequest'
 import fetch from 'node-fetch'
-import * as FormData from 'form-data'
+import {getSound} from '../common/soundCollections'
+import {Sound} from '../interfaces/Sound'
+import {twitterUpload} from '../twitter-cron/twitterCron'
 
 const TYPE_BLOCK_ACTIONS = "block_actions"
 
@@ -36,50 +38,35 @@ export const slackInteractivity = functions.https.onRequest(async (request, resp
 
     response
         .status(200)
-        .send()
+        .send("✅  Ça arrive !")
 
-    await postFileToSlack(responseUrl, selectedFile, channelId, token)
+    const tweetLink = await getTweetLink(selectedFile)
 
-    return await deletePreviewMessage(responseUrl)
-})
-
-const deletePreviewMessage = (responseUrl: string) => {
     return fetch(responseUrl, {
         method: "POST",
         body: JSON.stringify({
-            delete_original: true
+            delete_original: true,
+            replace_original: false,
+            response_type: 'in_channel',
+            text: tweetLink,
+            unfurl_media: true,
+            unfurl_link: true,
         })
     })
+})
+
+type TweetLink = string
+const getTweetLink = async (selectedFile: string): Promise<TweetLink> => {
+    const sound = await getSound(selectedFile)
+
+    if (sound && sound.tweetId) {
+        return constructTweetLink(sound)
+    }
+
+    await twitterUpload(selectedFile)
+    return getTweetLink(selectedFile)
 }
 
-const postFileToSlack = async (responseUrl: string, selectedFile: string, channelId: string, token: string) => {
-    const fileFetchResult = await fetch(`https://raw.githubusercontent.com/2ec0b4/kaamelott-soundboard/master/sounds/${selectedFile}`)
-
-    if (!fileFetchResult.ok) {
-        console.log("File fetch failed, should add a message")
-        return await deletePreviewMessage(responseUrl)
-    }
-    const buffer = await fileFetchResult.buffer()
-
-    const form = new FormData()
-    form.append('token', token)
-    form.append('channels', channelId)
-    form.append('filename', selectedFile)
-    form.append('title', selectedFile)
-    form.append('filetype', "mp3")
-    form.append('file', buffer, {
-        contentType: 'audio/mpeg3',
-        filename: selectedFile
-    } as FormData.AppendOptions)
-
-    return fetch("https://slack.com/api/files.upload", {
-        method: "POST",
-        headers: form.getHeaders(),
-        body: form
-    }).then(async response => {
-        if (!response.ok) {
-            console.warn(await response.json())
-        }
-        return response
-    })
+const constructTweetLink = (sound: Sound): TweetLink => {
+    return `https://twitter.com/${functions.config().twitter.account_name}/status/${sound.tweetId}`
 }

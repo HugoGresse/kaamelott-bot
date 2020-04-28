@@ -12,7 +12,7 @@ export const slackCommand = functions.https.onRequest(async (request, response) 
 
     const inputText = request.body.text.trim().toLowerCase()
 
-    const potentialSounds = (await findBestSoundsMatch(inputText)).slice(0, 3)
+    const potentialSounds = (await findBestSoundsMatch(inputText)).slice(0, 5)
 
     return response
         .contentType("json")

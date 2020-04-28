@@ -12,9 +12,8 @@ It use the fantastic soundboard from [Kaamelott Soundboard](https://github.com/2
 # Install
 
 <p align="center">
-Add the bot to your Slack workplace using the below button:  
-
-[![Add to slack](https://platform.slack-edge.com/img/add_to_slack.png)](https://slack.com/oauth/v2/authorize?client_id=89232678994.1064034348338&scope=commands)
+Add the bot to your Slack workplace using the below button:  <br/>
+  <a href="https://slack.com/oauth/v2/authorize?client_id=89232678994.1064034348338&scope=commands"><img src="https://platform.slack-edge.com/img/add_to_slack.png" alt="Add to slack button"/></a>
 </p>
 
 If the twitter link it not unfurling (video player displayed in Slack), add the [official twitter app](https://comm-montpellier.slack.com/apps/A0F7XDW93-twitter?next_id=0) to your Slack. 

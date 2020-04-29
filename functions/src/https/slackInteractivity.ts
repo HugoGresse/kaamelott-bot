@@ -3,7 +3,6 @@ import {verifySlackPostRequest} from './utils/verifySlackPostRequest'
 import fetch from 'node-fetch'
 import {getSound} from '../common/soundCollections'
 import {Sound} from '../interfaces/Sound'
-import {twitterUpload} from '../twitter-cron/twitterCron'
 
 const TYPE_BLOCK_ACTIONS = "block_actions"
 
@@ -42,19 +41,23 @@ export const slackInteractivity = functions.https.onRequest(async (request, resp
 
     await callResponseUrl("✅  Ça arrive !", responseUrl)
 
-    const tweetLink = await getTweetLink(selectedFile)
+    try {
+        const tweetLink = await getTweetLink(selectedFile)
 
-    return fetch(responseUrl, {
-        method: "POST",
-        body: JSON.stringify({
-            delete_original: true,
-            replace_original: false,
-            response_type: 'in_channel',
-            text: `Posté par <@${payload.user.id}> \r\n ${tweetLink}`,
-            unfurl_media: true,
-            unfurl_link: true,
+        return fetch(responseUrl, {
+            method: "POST",
+            body: JSON.stringify({
+                delete_original: true,
+                replace_original: false,
+                response_type: 'in_channel',
+                text: `Posté par <@${payload.user.id}> \r\n ${tweetLink}`,
+                unfurl_media: true,
+                unfurl_link: true,
+            })
         })
-    })
+    } catch (error) {
+        return callResponseUrl('Erreur lors de la récupération du son ou de son upload...', responseUrl, 400)
+    }
 })
 
 type TweetLink = string
@@ -65,7 +68,7 @@ const getTweetLink = async (selectedFile: string): Promise<TweetLink> => {
         return constructTweetLink(sound)
     }
 
-    await twitterUpload(selectedFile)
+    await requestNewSound(selectedFile)
     return getTweetLink(selectedFile)
 }
 
@@ -80,5 +83,21 @@ const callResponseUrl = (text: string, url: string, code?: number): Promise<any>
         body: JSON.stringify({
             text: msg,
         })
+    })
+}
+
+const requestNewSound = (file: string) => {
+    return fetch(functions.config().common.twitter_upload_url, {
+        method: "POST",
+        body: JSON.stringify({
+            key: functions.config().common.new_sound_key,
+            filename: file
+        })
+    }).then(response => {
+        if (response.ok) {
+            return
+        }
+        console.error("Failed to request a new sound", response.status, response.statusText)
+        throw new Error('Failed to get new sound')
     })
 }

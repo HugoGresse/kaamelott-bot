@@ -18,17 +18,12 @@ export const slackInteractivity = functions.https.onRequest(async (request, resp
 
     const payload = (JSON.parse(request.body.payload))
     const type = payload.type
-    const channelId = payload.channel.id
     const responseUrl = payload.response_url
     const selectedFile = payload.actions ? payload.actions[0].value : null
 
     if (type !== TYPE_BLOCK_ACTIONS) {
         console.log("Received a not implemented type " + type)
         return callResponseUrl('Type not implemented', responseUrl, 501)
-    }
-    if (!channelId) {
-        console.log("No channel id")
-        return callResponseUrl('Missing channel id', responseUrl, 400)
     }
     if (!responseUrl) {
         console.log("No response_url")

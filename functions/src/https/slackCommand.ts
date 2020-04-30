@@ -2,24 +2,25 @@ import * as functions from 'firebase-functions'
 import {verifySlackPostRequest} from './utils/verifySlackPostRequest'
 import {findBestSoundsMatch} from './utils/findBestSoundsMatch'
 import {Sound} from '../interfaces/Sound'
+import fetch from 'node-fetch'
 
 export const slackCommand = functions.https.onRequest(async (request, response) => {
     if (!await verifySlackPostRequest(request, response)) {
-        return
+        return response.status(418).send("I'm a teapot ☕️")
     }
 
-    console.log(request.body.user_name)
+    response.send()
+
+    console.log(`${request.body.team_domain} ${request.body.user_name}`)
 
     const inputText = request.body.text.trim().toLowerCase()
-
     const potentialSounds = (await findBestSoundsMatch(inputText)).slice(0, 5)
+    const responseUrl = request.body.response_url
 
-    return response
-        .contentType("json")
-        .status(200)
-        .send(JSON.stringify({
-            ...getSlackPreviewBlock(potentialSounds)
-        }))
+    return fetch(responseUrl, {
+        method: "POST",
+        body: JSON.stringify(getSlackPreviewBlock(potentialSounds))
+    })
 })
 
 export const getSlackPreviewBlock = (soundsMeta: Sound[]) => {

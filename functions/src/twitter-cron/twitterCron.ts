@@ -35,18 +35,50 @@ export const twitterCronTask = async () => {
     }
 }
 
-export const twitterUpload = async (fileName: string) => {
-    initTwitter(functions.config().twitter)
-
-    const kaamelottSoundboardQuotes = await getSoundboardSounds()
-    const sounds = kaamelottSoundboardQuotes.filter(sound => sound.file === fileName)
-
-    if (sounds.length > 0) {
-        const soundToAdd = sounds[0]
-        console.log(`Trying to add ${soundToAdd.file} because it was missing`)
-        await uploadSound(soundToAdd)
+export const twitterUpload = functions.https.onRequest(async (request, response) => {
+    response.set('Access-Control-Allow-Origin', '*')
+    if (!functions.config().common || !functions.config().common.new_sound_key) {
+        return response.status(418).send('Nop ❌')
     }
-}
+
+    const key = functions.config().common.new_sound_key
+    const payload = JSON.parse(request.body)
+    const submittedKey = payload.key
+    const fileNameToUpload = payload.filename
+    if (key !== submittedKey) {
+        return response.status(401).send('Nop ❌')
+    }
+
+    try {
+        initTwitter(functions.config().twitter)
+
+        const kaamelottSoundboardQuotes = await getSoundboardSounds()
+        const sounds = kaamelottSoundboardQuotes.filter(sound => sound.file === fileNameToUpload)
+
+        if (sounds.length > 0) {
+            const soundToAdd = sounds[0]
+            console.log(`Trying to add ${soundToAdd.file} because it was missing`)
+            await uploadSound(soundToAdd)
+            return response.send(JSON.stringify({
+                success: true
+            }))
+        } else {
+            return response.status(500).send({
+                msg: "error",
+                error: "No sound matched the requested one"
+            })
+        }
+    } catch (error) {
+        response.status(500).send({
+            msg: "error",
+            error
+        })
+    }
+    return response.status(500).send({
+        msg: "error",
+        error: "nothing to do"
+    })
+})
 
 const getMissingQuotes = async (): Promise<Sound[]> => {
     const firestoreQuotes = await getSounds()

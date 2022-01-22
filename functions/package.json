@@ -20,7 +20,7 @@
     "firebase-functions": "^3.6.1",
     "fluent-ffmpeg": "^2.1.2",
     "lodash": "^4.17.19",
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^3.1.1",
     "qs": "^6.9.3",
     "twitter": "^1.7.1"
   },

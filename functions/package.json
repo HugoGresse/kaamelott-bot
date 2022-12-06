@@ -21,7 +21,7 @@
     "fluent-ffmpeg": "^2.1.2",
     "lodash": "^4.17.19",
     "node-fetch": "^2.6.0",
-    "qs": "^6.9.3",
+    "qs": "^6.9.7",
     "twitter": "^1.7.1"
   },
   "devDependencies": {

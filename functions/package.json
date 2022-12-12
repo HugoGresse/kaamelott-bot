@@ -14,7 +14,7 @@
   },
   "main": "lib/index.js",
   "dependencies": {
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "ffmpeg-static": "^4.1.1",
     "firebase-admin": "^8.9.0",
     "firebase-functions": "^3.6.1",
